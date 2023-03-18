@@ -1,7 +1,7 @@
 # Install and configure InfluxDB v2.6.1 on CentOS 7
 
 ## Setup influxdb service account
-For running influxdb as non-root user, we need to create a victoriametrics user and group. To create a new system user and group, you can use these two commands:
+For running influxdb as non-root user, we need to create a `myinfluxdb` user and group. To create a new system user and group, you can use these two commands:
 ```
 sudo groupadd -r myinfluxdb
 sudo useradd -g myinfluxdb -d /var/lib/myinfluxdb -s /sbin/nologin --system myinfluxdb
