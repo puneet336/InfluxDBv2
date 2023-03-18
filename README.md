@@ -1,4 +1,4 @@
-# Install and configure VictoriaMetrics on CentOS 7
+# Install and configure InfluxDB v2.6.1 on CentOS 7
 
 ## Setup influxdb service account
 For running influxdb as non-root user, we need to create a victoriametrics user and group. To create a new system user and group, you can use these two commands:
@@ -104,10 +104,51 @@ sudo systemctl start myinfluxdb
 Enable and start Influx service to run on system boot automatically.
 
 ```
-$ sudo systemctl enable victoriametrics.service --now
+$ sudo systemctl enable myinfluxdb.service --now
 ```
 
 
+
+## Set up InfluxDB
+
+Download and install InfluxDB client binaries - 
+```
+ wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-2.6.1-linux-amd64.tar.gz
+ tar -xf influxdb2-client-2.6.1-linux-amd64.tar.gz
+ sudo cp influxdb2-client-2.6.1-linux-amd64/influx /usr/local/bin/influx261/
+```
+
+Now as we are using 9099 port for server, we need to update the default client configuration 
+```
+]> /usr/local/bin/influx261/influx config create --config-name myinfluxv2 --host-url http://localhost:9099 -a
+Active  Name            URL                     Org
+*       myinfluxv2      http://localhost:9099
+```
+
+now we need to create a default organization, user, bucket, and Operator API token. this can be done through UI (localhost:<port>) and CLI.
+We use CLI method as - 
+```
+/usr/local/bin/influx261/influx setup --host "http://localhost:9099"
+> Welcome to InfluxDB 2.0!
+? Please type your primary username puneet336
+? Please type your password *********
+? Please type your password again *********
+? Please type your primary organization name example.com
+? Please type your primary bucket name monitoring_prom
+? Please type your retention period in hours, or 0 for infinite 0
+? Setup with these parameters?
+  Username:          puneet336
+  Organization:      example.com
+  Bucket:            monitoring_prom
+  Retention Period:  infinite
+ Yes
+User            Organization            Bucket
+puneet336       amperecomputing.com     monitoring_prom
+]>
+```
+ 
+
+> retention period: Enter nothing for an infinite retention period. other units are nanoseconds (ns), microseconds (us or µs), milliseconds (ms), seconds (s), minutes (m), hours (h), days (d), and weeks (w). The InfluxDB retention enforcement service is responsible for verifying if data stored in a bucket exceeds the defined retention period and removing it accordingly. This process is automated and eliminates the need for manual intervention, ensuring that outdated data is removed to optimize disk usage. The retention enforcement service is set to run every 30 minutes by default, but you can modify this interval using the storage-retention-check-interval configuration option.
 
 
 
