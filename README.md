@@ -151,6 +151,8 @@ puneet336       amperecomputing.com     monitoring_prom
 > retention period: Enter nothing for an infinite retention period. other units are nanoseconds (ns), microseconds (us or µs), milliseconds (ms), seconds (s), minutes (m), hours (h), days (d), and weeks (w). The InfluxDB retention enforcement service is responsible for verifying if data stored in a bucket exceeds the defined retention period and removing it accordingly. This process is automated and eliminates the need for manual intervention, ensuring that outdated data is removed to optimize disk usage. The retention enforcement service is set to run every 30 minutes by default, but you can modify this interval using the storage-retention-check-interval configuration option.
 
 
+To continue to use InfluxDB via the CLI, you need the API token created during setup. To view the token, log into the UI (http://localhost:9099) with the credentials created above. 
+
 
 ## Why migrate to influxDB2 
 In version 1.7.x, you had four different components that one would assemble to form the TICK stack (Telegraf, InfluxDB, Chronograf and Kapacitor).
