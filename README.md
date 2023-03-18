@@ -3,8 +3,8 @@
 ## Setup influxdb service account
 For running influxdb as non-root user, we need to create a victoriametrics user and group. To create a new system user and group, you can use these two commands:
 ```
-groupadd -r myinfluxdb
-useradd -g myinfluxdb -d /var/lib/myinfluxdb -s /sbin/nologin --system myinfluxdb
+sudo groupadd -r myinfluxdb
+sudo useradd -g myinfluxdb -d /var/lib/myinfluxdb -s /sbin/nologin --system myinfluxdb
 ```
 
 ## Download and install InfluxDB binaries - 
@@ -22,25 +22,25 @@ influxd  LICENSE  README.md
 
 create influxDB binary directory and place binary -
 ```
-mkdir -p /usr/local/bin/influx261/
-cp influxdb2_linux_amd64/influxd /usr/local/bin/influx261/
-chown root:root /usr/local/bin/influx261/influxd
+sudo mkdir -p /usr/local/bin/influx261/
+sudo cp influxdb2_linux_amd64/influxd /usr/local/bin/influx261/
+sudo chown root:root /usr/local/bin/influx261/influxd
 ```
 
 ## Configure Influxdb
 
 Create directories for VictoriaMetrics metadata, data , wal and set ownership to myinfluxdb account as :
 ```
-mkdir -p /var/lib/myinfluxdb/meta
-mkdir -p /var/lib/myinfluxdb/data
-mkdir -p /var/lib/myinfluxdb/wal
+sudo mkdir -p /var/lib/myinfluxdb/meta
+sudo mkdir -p /var/lib/myinfluxdb/data
+sudo mkdir -p /var/lib/myinfluxdb/wal
 chown -R myinfluxdb:myinfluxdb /var/lib/myinfluxdb/
 ```
 
 setup logging directory 
 ```
-mkdir -p /var/log/myinfluxdb/
-chown myinfluxdb:myinfluxdb  /var/log/myinfluxdb/
+sudo mkdir -p /var/log/myinfluxdb/
+sudo chown myinfluxdb:myinfluxdb  /var/log/myinfluxdb/
 ```
 
 Create new systemd services.
@@ -48,8 +48,8 @@ Create new systemd services.
 sudo vi /etc/systemd/system/myinfluxdb.service
 ```
 
+influxd sends outputs all logs to console so we will take help of systemd service and rsyslog to manage logging. 
 Add the following lines to the file:
-
 
 [Unit]
 Description=High-performance, cost-effective and scalable time series database, long-term remote storage for Prometheus
@@ -64,10 +64,13 @@ StartLimitBurst=5
 StartLimitInterval=0
 Restart=on-failure
 RestartSec=1
-Environment="INFLUXD_CONFIG_PATH=/usr/local/bin/influx261/influxd.conf"
+Environment="INFLUXD_CONFIG_PATH=/usr/local/bin/influx261/influxd.yaml"
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=myinfluxdbv26
 
 ExecStart=/usr/local/bin/influx261/influxd run
-
 ExecStop=/bin/kill -s SIGTERM $MAINPID
 
 LimitNOFILE=65536
@@ -76,46 +79,29 @@ LimitNPROC=32000
 [Install]
 WantedBy=multi-user.target
 ```
-
-create a configuration file /usr/local/bin/influx261/influxd.conf as - 
+since we have choses syslog for logging, create following configuration file at /etc/rsyslog.d/myinfluxdbv26.conf with - 
 ```
-[http]
-  bind-address = "0.0.0.0:9099"
-  log-enabled = true
-  write-tracing = false
-  pprof-enabled = true
-  auth-enabled = true
-  shared-secret = "mysecret"
-  max-row-limit = 0
-  max-connection-limit = 0
-
-[logging]
-  format = "auto"
-  level = "info"
-  suppress-logo = false
-  stderr = true
-  log-file-path = "/var/log/myinfluxdb/influxdb2.log"
-  log-rotate-enabled = true
-  log-rotate-max-size = 10MB
-  log-rotate-max-age = 7d
-
-[meta]
-  dir = "/var/lib/myinfluxdb/meta"
-
-[storage]
-  dir = "/var/lib/myinfluxdb/data"
-  retention-intervals = ["1h", "6h", "12h", "24h", "2d", "7d", "30d", "365d"]
-  retention-check-interval = "10m"
-  wal-dir = "/var/lib/myinfluxdb/wal"
-
-[[retry]]
-  interval = "1s"
-  max-interval = "10s"
-  max-duration = "2m"
-  exponential-base = 2
+if $programname == 'myinfluxdbv26' then /var/log/myinfluxdb/output.log
+& stop
 ```
 
-Enable and start VictoriaMetrics service to run on system boot automatically.
+create a configuration file /usr/local/bin/influx261/influxd.yml as - 
+```
+http-bind-address: "0.0.0.0:9099"
+engine-path: /var/lib/myinfluxdb/engine
+bolt-path: /var/lib/myinfluxdb/myinfluxd.bolt
+sqlite-path: /var/lib/myinfluxdb/myinfluxd.sqlite
+```
+
+Configuration files are in order, now start / restart services - 
+```
+sudo systemctl daemon-reload
+sudo systemctl restart rsyslog
+sudo systemctl start myinfluxdb
+```
+
+
+Enable and start Influx service to run on system boot automatically.
 
 ```
 $ sudo systemctl enable victoriametrics.service --now
