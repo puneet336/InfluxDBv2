@@ -106,8 +106,8 @@ now create a python code which performs following in order -
 1. connect to 1.x database instance
 2. list databases
 3. list measurements
-4. for each measurement  , print TAG and FIELD data
-5. for each measurement, get the oldest record available
+4. for monitoring measurement  , print TAG and FIELD data
+5. for monitoring measurement, get the oldest record available
 
 ```
 #!/usr/bin/env python3
