@@ -1,5 +1,5 @@
 # InfluxDB1
-## inspecting data  ( Command Line )
+## inspecting 1.x data  ( Command Line )
 connect to database using client -
 ```
 [puneets@server1]~> influx
@@ -217,7 +217,9 @@ ser Name        User ID                 Permissions
 2.x]~> /usr/local/bin/influx261/influx write --org amperecomputing.com --bucket monitoring --token QjTuIesU0Fm5oafWgP2uigtB1a77e7zytNbv07vdDj6q__06vIbeBe2i_0qT4X9H6L0bb-L_ovfoPxFeYxAj6g== --file ./backup1
 ```
 
-expected output  
+expected output  was Error2. but despite the Error2, we were able to query the monitoring database and list the data using `influx v1 shell` command
+
+
 
 Error1
 ```
@@ -230,8 +232,31 @@ Sloution -
 ]~> sed -i '1,7d' ./backup1 
 ```
 
+Error2
+```
+Error: failed to write data: 400 Bad Request: unable to parse 'skipped missing file: /database/influxdb/wal/monitoring/autogen/100/_58045.wal': invalid field format
+```
 
 
+## inspecting 2.x data  ( Command Line )
+```
+2.x]~> /usr/local/bin/influx261/influx query --org amperecomputing.com --token "QjTuIesU0Fm5oafWgP2uigtB1a77e7zytNbv07vdDj6q__06vIbeBe2i_0qT4X9H6L0bb-L_ovfoPxFeYxAj6g==" 'from(bucket: "monitoring") |> range(start: 0) |> filter(fn: (r) => r._measurement == "queue_running") |> yield()'
+Result: _result
+Table: keys: [_start, _stop, Total_queue_running, __name__, _field, _measurement, instance, job]
+                   _start:time                      _stop:time     Total_queue_running:string         __name__:string           _field:string     _measurement:string         instance:string              job:string                      _time:time                  _value:float
+------------------------------  ------------------------------  -----------------------------  ----------------------  ----------------------  ----------------------  ----------------------  ----------------------  ------------------------------  ----------------------------
+1970-01-01T00:00:00.000000000Z  2023-03-19T12:39:03.741057134Z  Running jobs in Queue RsvLong           queue_running                   value           queue_running          localhost:9337             den-cluster  2023-01-18T08:49:32.157000000Z                            41
+1970-01-01T00:00:00.000000000Z  2023-03-19T12:39:03.741057134Z  Running jobs in Queue RsvLong           queue_running                   value           queue_running          localhost:9337             den-cluster  2023-01-18T08:50:32.157000000Z                            41
+1970-01-01T00:00:00.000000000Z  2023-03-19T12:39:03.741057134Z  Running jobs in Queue RsvLong           queue_running                   value           queue_running          localhost:9337  
+```
+
+
+/usr/local/bin/influx261/influx query was hanging up for me so i used GUI
+
+<img width="938" alt="image" src="https://user-images.githubusercontent.com/5935825/226174477-d150ade2-f6b7-48d5-87cc-27c618fda1ac.png">
+
+to query buckets - 
+<img width="791" alt="image" src="https://user-images.githubusercontent.com/5935825/226174527-ad376677-dab4-478b-ba2e-7728f7e349fe.png">
 
 
 
