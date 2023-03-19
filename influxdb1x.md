@@ -253,10 +253,22 @@ Table: keys: [_start, _stop, Total_queue_running, __name__, _field, _measurement
 
 /usr/local/bin/influx261/influx query was hanging up for me so i used GUI
 
+
 <img width="938" alt="image" src="https://user-images.githubusercontent.com/5935825/226174477-d150ade2-f6b7-48d5-87cc-27c618fda1ac.png">
 
 to query buckets - 
+
 <img width="791" alt="image" src="https://user-images.githubusercontent.com/5935825/226174527-ad376677-dab4-478b-ba2e-7728f7e349fe.png">
+
+
+## Visializing via grafana 
+
+<img width="661" alt="image" src="https://user-images.githubusercontent.com/5935825/226182294-4fb612bc-4656-4ede-99b1-62ba18d3cec7.png">
+
+Selecting Data by specfic Tag - 
+
+<img width="665" alt="image" src="https://user-images.githubusercontent.com/5935825/226182626-c3ecbc8f-cf7c-4cef-913e-adc5ad24d13c.png">
+
 
 
 
