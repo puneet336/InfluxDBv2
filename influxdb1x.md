@@ -155,3 +155,87 @@ MEASUREMENT: Cluster_SSUSP
 TAGS: ['SSUSP', '__name__', 'instance', 'job']
 FIELDS: ['value']
 ```
+
+
+# Migrating Data ( 1.x to 2.x )
+## convert the 1.x data into line protocol format using influx_inspect
+from the inspection and config file analysis, we know that in source 1.x database we have - 
+1. database "monitoring"
+2. 
+```
+
+[meta]
+  dir = "/database/influxdb/meta"
+
+[data]
+  wal-dir = "/database/influxdb/wal"
+  dir = "/database/influxdb/data"
+```
+
+we will now attempt migration of 1 hour data under - /database/data_migrate/try1 
+```
+time influx_inspect export -database "monitoring" -datadir "/database/influxdb/data" -waldir "/database/influxdb/wal" -out "/database/data_migrate/try1/backup1" -start 2023-01-18T06:48:32.157000Z -end 2023-01-18T09:48:32.157000Z
+```
+expected  output   - 
+```
+writing out tsm file data for monitoring/autogen...complete.
+writing out wal file data for monitoring/autogen...complete.
+152.770u 26.230s 7:18.98 40.7%  0+0k 41416024+45358592io 369pf+0w
+```
+size of file - 
+```
+[1.x]/database/data_migrate/try1> ls -lrt backup1
+-rw-r--r-- 1 monadmin monadmin 23223595239 Mar 19 04:09 backup1
+[1.x]/database/data_migrate/try1>
+```
+
+>NOTE: 22G is big, and due to lack of space on the target system ( 2.x) we decided to use 1 hour data 
+
+scp backup1 puneet@den-grafana-02:~/
+
+## importing line protocol data into influx 2.x
+notice the change in terminology  - 
+database (1.x) = Bucket ( 2.x)
+
+So create a database/Bucket in influx 2.x as -
+```
+2.x]~> /usr/local/bin/influx261/influx bucket create -n monitoring -o amperecomputing.com
+ID                      Name            Retention       Shard group duration    Organization ID         Schema Type
+e8bbc11afb5fb90c        monitoring      infinite        168h0m0s                8342dd7d8cd5e12a        implicit
+2.x]~>
+```
+
+get your token 
+```
+2.x]~> /usr/local/bin/influx261/influx auth ls
+ser Name        User ID                 Permissions
+0ae9599f56c47000        puneet336's Token       QjTuIesU0Fm5oafWgP2uigtB1a77e7zytNbv07vdD_0qT4X9H6L0bb-L_ovfoPxFeYxAj6g== puneet336       0ae9599f41c47000        [read:/authorizations write:/authorizations read:/buckets write:/buckets read:/dashboards write:/dashboards read:/orgs write:/orgs read:/sources write:/sources read:/tasks write:/tasks read:/telegrafs write:/telegrafs read:/users write:/users read:/variables write:/variables read:/scrapers write:/scrapers read:/secrets write:/secrets read:/labels write:/labels read:/views write:/views read:/documents write:/documents read:/notificationRules write:/notificationRules read:/notificationEndpoints write:/notificationEndpoints read:/checks write:/checks read:/dbrp write:/dbrp read:/notebooks write:/notebooks read:/annotations write:/annotations read:/remotes write:/remotes read:/replications write:/replications]
+```
+
+
+```
+2.x]~> /usr/local/bin/influx261/influx write --org amperecomputing.com --bucket monitoring --token QjTuIesU0Fm5oafWgP2uigtB1a77e7zytNbv07vdDj6q__06vIbeBe2i_0qT4X9H6L0bb-L_ovfoPxFeYxAj6g== --file ./backup1
+```
+
+expected output  
+
+Error1
+```
+Error: failed to write data: 400 Bad Request: unable to parse 'CREATE DATABASE monitoring WITH NAME autogen': invalid field format
+```
+Sloution - 
+```
+]~> grep -rin "# writing tsm data" ./backup1
+7:# writing tsm data
+]~> sed -i '1,7d' ./backup1 
+```
+
+
+
+
+
+
+
+
+
+
